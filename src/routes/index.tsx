@@ -4,19 +4,24 @@ import Profile from "../pages/Profile";
 import Settings from "../pages/Settings";
 import MainLayout from "../layout/MainLayout";
 import PublicDocView from "../pages/PublicDocView";
+import EditDoc from "../pages/EditDoc";
+import ProtectedRoute from "../components/ProtectedRoutes";
+import Login from "../pages/Login";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <MainLayout />,
+    element: <ProtectedRoute />, // 🔒 Protection Layer
     children: [
-      { index: true, element: <Dashboard /> },
-      { path: "profile", element: <Profile /> },
-      { path: "settings", element: <Settings /> },
+      {
+        element: <MainLayout />,
+        children: [
+          { index: true, element: <Dashboard /> },
+          { path: "edit/:id?", element: <EditDoc /> },
+        ],
+      },
     ],
   },
-  {
-    path: "view/:shareId",
-    element: <PublicDocView />,
-  },
+  { path: "/login", element: <Login /> }, // Public
+  { path: "/view/:shareId", element: <PublicDocView /> }, // Public
 ]);

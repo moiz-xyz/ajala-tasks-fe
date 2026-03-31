@@ -1,40 +1,28 @@
-import { useState } from "preact/hooks"; // Use preact hooks
-import type { JSX } from "preact"; // Type-only import for JSX namespace
+import { useState } from "preact/hooks";
+import type { JSX } from "preact";
 import { useParams } from "react-router-dom";
-import axios from "axios";
-
-interface DocumentData {
-  title: string;
-  content: string;
-  shareId: string;
-}
+import { docService } from "../service/api"; // Use your new service
+import type { DocData } from "../service/api";
 
 const PublicDocView = () => {
   const { shareId } = useParams<{ shareId: string }>();
 
-  const [passcode, setPasscode] = useState<string>("");
-  const [doc, setDoc] = useState<DocumentData | null>(null);
-  const [error, setError] = useState<string>("");
-  const [isLocked, setIsLocked] = useState<boolean>(true);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [passcode, setPasscode] = useState("");
+  const [doc, setDoc] = useState<DocData | null>(null);
+  const [error, setError] = useState("");
+  const [isLocked, setIsLocked] = useState(true);
+  const [loading, setLoading] = useState(false);
 
-  // Fix: Use JSX.TargetedEvent for Preact to handle 'currentTarget' correctly
-  const handleUnlock = async (
-    e: JSX.TargetedEvent<HTMLFormElement, Event>,
-  ): Promise<void> => {
+  const handleUnlock = async (e: JSX.TargetedEvent<HTMLFormElement, Event>) => {
     e.preventDefault();
+    if (!shareId) return;
+
     setLoading(true);
     setError("");
 
     try {
-      const res = await axios.post<DocumentData>(
-        `http://localhost:5000/api/docs/verify-share`,
-        {
-          shareId,
-          passcode,
-        },
-      );
-
+      // Calling your centralized API service
+      const res = await docService.verifyShare(shareId, passcode);
       setDoc(res.data);
       setIsLocked(false);
     } catch (err) {
@@ -44,32 +32,30 @@ const PublicDocView = () => {
     }
   };
 
-  // Fix: Use JSX.TargetedEvent for the input change
-  const handleInputChange = (
-    e: JSX.TargetedEvent<HTMLInputElement, Event>,
-  ): void => {
-    setPasscode(e.currentTarget.value); // Use currentTarget in Preact
-  };
-
   if (isLocked) {
     return (
-      <div style={{ textAlign: "center", marginTop: "100px" }}>
+      <div
+        style={{
+          textAlign: "center",
+          marginTop: "100px",
+          fontFamily: "sans-serif",
+        }}
+      >
         <h2>🔒 Private Document</h2>
+        <p>This document is protected. Please enter the code to view.</p>
         <form onSubmit={handleUnlock}>
           <input
             type="password"
-            placeholder="Enter Access Code"
-            value={passcode}
-            onInput={handleInputChange} // Preact prefers onInput over onChange
-            disabled={loading}
+            onInput={(e) => setPasscode(e.currentTarget.value)}
+            placeholder="Enter Code"
             style={{
               padding: "10px",
               borderRadius: "4px",
               border: "1px solid #ccc",
             }}
           />
-          <button type="submit" disabled={loading || !passcode}>
-            {loading ? "Verifying..." : "Unlock"}
+          <button type="submit" disabled={loading}>
+            {loading ? "Unlocking..." : "Unlock"}
           </button>
         </form>
         {error && <p style={{ color: "red" }}>{error}</p>}
