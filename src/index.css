@@ -1,0 +1,93 @@
+@import "tailwindcss";
+
+@theme {
+  --color-accent: #646cff;
+  --color-accent-bg: #f9f9f9;
+  --color-accent-border: #646cff;
+  --color-border: #e2e8f0;
+  --color-text-h: #1a1a1a;
+  --color-social-bg: #ffffff;
+  --shadow-custom: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+@layer base {
+  body {
+    @apply bg-gray-50 text-gray-900 overflow-x-hidden;
+  }
+
+  /* Fixed the Responsive Width here */
+  #root,
+  #app {
+    @apply w-full lg:w-[1126px] max-w-full mx-auto text-center border-x border-[--color-border] min-h-[100svh] flex flex-col box-border bg-white;
+  }
+}
+
+/* --- Responsive Component Styles --- */
+
+.hero {
+  @apply relative py-10 lg:py-20;
+
+  .base {
+    @apply w-32 lg:w-[170px] relative z-0 mx-auto;
+  }
+
+  .framework,
+  .vite {
+    @apply absolute inset-x-0 mx-auto transition-transform duration-500;
+  }
+
+  .framework {
+    @apply z-1 top-8 lg:top-[34px] h-6 lg:h-[28px] scale-110 lg:scale-140;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(44deg) rotateY(39deg);
+  }
+
+  .vite {
+    @apply z-0 top-20 lg:top-[107px] h-5 lg:h-[26px] scale-75 lg:scale-80;
+    transform: perspective(2000px) rotateZ(300deg) rotateX(40deg) rotateY(39deg);
+  }
+}
+
+#center {
+  @apply flex flex-col gap-6 lg:gap-[25px] justify-center items-center flex-grow px-5 py-8 lg:p-0;
+}
+
+#next-steps {
+  @apply flex flex-col lg:flex-row border-t border-[--color-border] text-center lg:text-left;
+
+  & > div {
+    @apply flex-1 p-6 lg:p-8;
+  }
+
+  /* Sidebar border for desktop, bottom border for mobile */
+  #docs {
+    @apply border-b lg:border-b-0 lg:border-r border-[--color-border];
+  }
+}
+
+#next-steps ul {
+  @apply list-none p-0 flex flex-wrap gap-2 mt-5 lg:mt-8 justify-center lg:justify-start;
+
+  li {
+    @apply w-full sm:w-auto;
+  }
+
+  a {
+    @apply text-[--color-text-h] text-sm lg:text-base rounded-md bg-[--color-social-bg] flex items-center justify-center lg:justify-start gap-2 px-3 py-2 border border-gray-100 no-underline transition-shadow hover:shadow-[--shadow-custom];
+
+    .button-icon {
+      @apply h-4 w-4 lg:h-[18px] lg:w-[18px];
+    }
+  }
+}
+
+.counter {
+  @apply text-base px-3 py-1 lg:px-[10px] lg:py-[5px] rounded-md text-[--color-accent] bg-[--color-accent-bg] border-2 border-transparent transition-colors mb-6 cursor-pointer;
+
+  &:hover {
+    @apply border-[--color-accent-border];
+  }
+}
+
+#spacer {
+  @apply h-12 lg:h-[88px] border-t border-[--color-border];
+}
