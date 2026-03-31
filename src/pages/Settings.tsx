@@ -8,21 +8,15 @@ const Settings: React.FC = () => {
       </div>
       <div className="p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium text-gray-900">Email Notifications</p>
-            <p className="text-sm text-gray-500">
-              Receive weekly activity reports.
-            </p>
-          </div>
           <div className="w-12 h-6 bg-blue-600 rounded-full"></div>
         </div>
         <div className="flex items-center justify-between">
-          <div>
+          {/* <div>
             <p className="font-medium text-gray-900">Public Profile</p>
             <p className="text-sm text-gray-500">
               Allow others to see your activity.
             </p>
-          </div>
+          </div> */}
           <div className="w-12 h-6 bg-gray-200 rounded-full"></div>
         </div>
       </div>

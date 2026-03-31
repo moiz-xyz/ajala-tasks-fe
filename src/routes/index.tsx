@@ -3,6 +3,7 @@ import Dashboard from "../pages/Dashboard";
 import Profile from "../pages/Profile";
 import Settings from "../pages/Settings";
 import MainLayout from "../layout/MainLayout";
+import PublicDocView from "../pages/PublicDocView";
 
 export const router = createBrowserRouter([
   {
@@ -13,5 +14,9 @@ export const router = createBrowserRouter([
       { path: "profile", element: <Profile /> },
       { path: "settings", element: <Settings /> },
     ],
+  },
+  {
+    path: "view/:shareId",
+    element: <PublicDocView />,
   },
 ]);
