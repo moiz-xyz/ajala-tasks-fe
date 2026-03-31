@@ -11,15 +11,17 @@ const api = axios.create({
   },
 });
 
-// Types for your data
 export interface DocData {
   _id?: string;
   title: string;
   content: string;
-  passcode?: string;
-  shareId?: string;
-  userRole?: "owner" | "editor" | "viewer";
-  requiredRole?: "admin" | "editor" | "viewer";
+  // Update this to handle populated owner data
+  owner?: {
+    _id: string;
+    email: string;
+  };
+  requiredRole?: string;
+  userRole?: string;
 }
 
 export interface SharePayload {

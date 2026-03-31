@@ -15,15 +15,15 @@ const EditDoc = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [passcode, setPasscode] = useState("");
-  const [userRole, setUserRole] = useState<string | undefined>("owner");
+  const [userRole, setUserRole] = useState<string | undefined>("viewer");
   const [requiredRole, setRequiredRole] = useState("viewer");
   const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setSocket(sc);
 
     if (id) {
-      // Join the socket room for this specific document
       sc.emit("join-document", id);
 
       docService
@@ -31,10 +31,12 @@ const EditDoc = () => {
         .then((res) => {
           setTitle(res.data.title || "");
           setContent(res.data.content || "");
-          setUserRole(res.data.userRole || "owner");
+          setUserRole(res.data.userRole || "viewer");
           if (res.data.requiredRole) setRequiredRole(res.data.requiredRole);
         })
-        .catch((err) => console.error("Error fetching doc", err));
+        .catch((err) => {
+          console.error("Error fetching doc", err);
+        });
     }
 
     return () => {
@@ -44,21 +46,18 @@ const EditDoc = () => {
 
   useEffect(() => {
     if (!socket) return;
-
     const handler = (newContent: string) => {
-      // Use functional update to avoid infinite loops and hanging
       setContent((prev) => (prev === newContent ? prev : newContent));
     };
-
     socket.on("receive-changes", handler);
     return () => {
       socket.off("receive-changes", handler);
     };
   }, [socket]);
 
-  const isReadOnly = userRole === "viewer";
+  // FIX: Unlock editor if requiredRole is "viewer" (Public) OR if user is owner/editor
+  const isReadOnly = requiredRole === "viewer" ? false : userRole === "viewer";
 
-  // Critical fix: use 'source' to prevent loops/hanging
   const handleEditorChange = (value: string, _delta: any, source: string) => {
     setContent(value);
     if (socket && id && source === "user") {
@@ -66,52 +65,35 @@ const EditDoc = () => {
     }
   };
 
+  const handleShare = () => {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   const handleFileUpload = (e: JSX.TargetedEvent<HTMLInputElement, Event>) => {
-    // 1. Safely grab the file list
     const fileList = e.currentTarget.files;
     if (!fileList || fileList.length === 0) return;
-
     const file = fileList[0];
     const reader = new FileReader();
 
-    // 2. Setup the load handler with error boundaries
     reader.onload = (event) => {
       try {
         const result = event.target?.result;
-
-        // Ensure the result is actually a string before using it
-        if (typeof result !== "string") {
-          console.warn("File result is not a string.");
-          return;
-        }
-
-        // 3. Update state and emit via socket
+        if (typeof result !== "string") return;
         setContent(result);
-
-        if (socket && id) {
+        if (socket && id)
           socket.emit("send-changes", { docId: id, content: result });
-        }
-
-        // 4. Update title if it's currently empty
-        if (!title && file.name) {
-          const fileName = file.name.replace(/\.[^/.]+$/, "");
-          setTitle(fileName);
-        }
+        if (!title && file.name) setTitle(file.name.replace(/\.[^/.]+$/, ""));
       } catch (err) {
-        console.error("Critical error in FileReader onload:", err);
+        console.error(err);
       } finally {
-        // 5. CRITICAL: Clear the input value so you can upload
-        // the same file again immediately if needed
         if (e.currentTarget) e.currentTarget.value = "";
       }
     };
-
-    // 6. Handle actual reading errors (e.g., file locked)
-    reader.onerror = () => {
-      console.error("FileReader failed to read the file.");
-    };
-
-    reader.readAsText(file); //
+    reader.readAsText(file);
   };
 
   const handleSave = async () => {
@@ -124,20 +106,17 @@ const EditDoc = () => {
       owner: userId,
     };
 
-    if (isReadOnly) return;
-    setLoading(true);
+    if (isReadOnly && userRole !== "owner") return;
 
+    setLoading(true);
     try {
-      if (id) {
-        await docService.update(id, data);
-      } else {
-        await docService.create(data);
-      }
+      if (id) await docService.update(id, data);
+      else await docService.create(data);
       alert("Document Saved!");
       navigate("/");
     } catch (err) {
-      alert("Save failed. Check console.");
       console.error(err);
+      alert("Save failed.");
     } finally {
       setLoading(false);
     }
@@ -170,33 +149,55 @@ const EditDoc = () => {
           }
           style={{
             fontSize: "24px",
-            width: "70%",
+            width: "50%",
             padding: "10px",
             border: "1px solid #ddd",
             borderRadius: "8px",
           }}
         />
 
-        {!isReadOnly && (
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            style={{
-              padding: "10px 25px",
-              backgroundColor: "#2563eb",
-              color: "white",
-              border: "none",
-              borderRadius: "8px",
-              cursor: "pointer",
-              fontWeight: "bold",
-            }}
-          >
-            {loading ? "Saving..." : "Save Document"}
-          </button>
-        )}
+        <div style={{ display: "flex", gap: "10px" }}>
+          {id && (
+            <button
+              onClick={handleShare}
+              style={{
+                padding: "10px 20px",
+                backgroundColor: copied ? "#059669" : "#f3f4f6",
+                color: copied ? "white" : "#374151",
+                border: "1px solid #d1d5db",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "600",
+                transition: "all 0.2s",
+              }}
+            >
+              {copied ? "✓ Copied!" : "🔗 Share"}
+            </button>
+          )}
+
+          {/* Show save button if user can edit */}
+          {(!isReadOnly || userRole === "owner") && (
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              style={{
+                padding: "10px 25px",
+                backgroundColor: "#2563eb",
+                color: "white",
+                border: "none",
+                borderRadius: "8px",
+                cursor: "pointer",
+                fontWeight: "bold",
+              }}
+            >
+              {loading ? "Saving..." : "Save Document"}
+            </button>
+          )}
+        </div>
       </div>
 
-      {!isReadOnly && (
+      {/* ACCESS SETTINGS: Visible to Owner or if editing is allowed */}
+      {(!isReadOnly || userRole === "owner") && (
         <div
           style={{
             display: "flex",
@@ -222,7 +223,7 @@ const EditDoc = () => {
 
           <div>
             <label style={{ fontSize: "14px", marginRight: "8px" }}>
-              Access:
+              Who can edit?
             </label>
             <select
               value={requiredRole}
@@ -235,17 +236,22 @@ const EditDoc = () => {
                 border: "1px solid #ccc",
               }}
             >
-              <option value="viewer">Public (Viewer)</option>
-              <option value="editor">Restricted (Editor)</option>
-              <option value="admin">Private (Admin)</option>
+              <option value="viewer">Everyone (Public)</option>
+              <option value="editor">Only Editors (Restricted)</option>
+              <option value="admin">Only Me (Private)</option>
             </select>
           </div>
         </div>
       )}
 
-      {isReadOnly && (
+      {isReadOnly && userRole !== "owner" && (
         <div
-          style={{ color: "#6b7280", marginBottom: "10px", fontSize: "14px" }}
+          style={{
+            color: "#ef4444",
+            marginBottom: "10px",
+            fontSize: "14px",
+            fontWeight: "bold",
+          }}
         >
           ℹ️ You are in View-Only mode
         </div>

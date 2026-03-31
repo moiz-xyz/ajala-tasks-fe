@@ -4,11 +4,7 @@ import { Link, useLocation } from "react-router-dom";
 const Sidebar: React.FC = () => {
   const location = useLocation();
 
-  const links = [
-    { name: "Dashboard", path: "/" },
-    { name: "Profile", path: "/profile" },
-    { name: "Settings", path: "/settings" },
-  ];
+  const links = [{ name: "Dashboard", path: "/" }];
 
   return (
     <div className="flex h-full flex-col p-4">
