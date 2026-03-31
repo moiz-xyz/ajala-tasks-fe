@@ -25,6 +25,7 @@ const EditDoc = () => {
   const [passcode, setPasscode] = useState("");
   const [userRole, setUserRole] = useState<string | undefined>("owner"); // Track role
   const [loading, setLoading] = useState(false);
+  const [requiredRole, setRequiredRole] = useState("viewer");
 
   useEffect(() => {
     setSocket(sc);
@@ -61,13 +62,18 @@ const EditDoc = () => {
   };
 
   const handleSave = async () => {
-    const data = { title, content, passcode };
+    // Map frontend state to backend expected fields
+    const data = {
+      title,
+      content,
+      requiredRole, // Matches backend: "viewer", "editor", or "admin"
+      passcode, // Keep if your model supports both
+    };
 
-    if (isReadOnly) return; // Prevent viewers from saving
+    if (isReadOnly) return;
     setLoading(true);
 
     try {
-      const docData = { title, content, passcode };
       if (id) {
         await docService.update(id, data);
       } else {

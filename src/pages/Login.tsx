@@ -1,16 +1,31 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { authService } from "../service/api";
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Add your auth logic here
-    console.log("Logging in with:", email, password);
-    navigate("/"); // Redirect to dashboard after success
+
+    try {
+      // 1. Call your actual backend login API
+      // Replace 'authService.login' with your actual axios/fetch call
+
+      const res = await authService.login({ email, password });
+
+      // Save both pieces of data
+      localStorage.setItem("token", res.data.token);
+      localStorage.setItem("userId", res.data.userId);
+
+      // 3. Redirect to dashboard
+      navigate("/");
+    } catch (err) {
+      alert("Login failed! Check your credentials.");
+      console.error(err);
+    }
   };
 
   return (

@@ -28,28 +28,45 @@ export interface SharePayload {
 
 // Centralized API Calls
 export const docService = {
+  getByUser: (userId: string) =>
+    api.get<DocData[]>(`/documents/user/${userId}`),
+
   // Get all documents for dashboard
-  getAll: () => api.get<DocData[]>("/docs"),
+  getAll: () => api.get<DocData[]>("/documents"),
 
   // Get single doc by ID (Private/Auth access)
-  getById: (id: string) => api.get<DocData>(`/docs/${id}`),
+  getById: (id: string) => api.get<DocData>(`/documents/${id}`),
 
   // Create new doc
-  create: (data: DocData) => api.post<DocData>("/docs", data),
+  create: (data: DocData) => api.post<DocData>("/documents", data),
 
   // Update existing doc
-  update: (id: string, data: DocData) => api.put<DocData>(`/docs/${id}`, data),
+  update: (id: string, data: DocData) =>
+    api.put<DocData>(`/documents/${id}`, data),
 
   // Delete doc
-  delete: (id: string) => api.delete(`/docs/${id}`),
+  delete: (id: string) => api.delete(`/documents/${id}`),
 
   // Public/Shared Access (Verify passcode)
   verifyShare: (shareId: string, passcode: string) =>
-    api.post<DocData>("/docs/verify-share", { shareId, passcode }),
+    api.post<DocData>("/documents/verify-share", { shareId, passcode }),
 
   // Invite someone via email
   shareWithEmail: (id: string, payload: SharePayload) =>
-    api.post(`/docs/${id}/share`, payload),
+    api.post(`/documents/${id}/share`, payload),
+};
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
+export const authService = {
+  // Login to get token and userId
+  login: (credentials: any) => api.post("/auth/login", credentials),
 };
 
 export const sc = io(API_BASE_URL.replace("/api", "")); // Socket.IO client instance
