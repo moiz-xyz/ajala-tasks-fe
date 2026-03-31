@@ -19,6 +19,7 @@ export interface DocData {
   passcode?: string;
   shareId?: string;
   userRole?: "owner" | "editor" | "viewer";
+  requiredRole?: "admin" | "editor" | "viewer";
 }
 
 export interface SharePayload {

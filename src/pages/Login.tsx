@@ -16,9 +16,14 @@ const Login: React.FC = () => {
 
       const res = await authService.login({ email, password });
 
+      if (res.status !== 200) {
+        throw new Error("Login failed");
+      }
+
+      // 2. On success, save token and userId to localStorage
       // Save both pieces of data
       localStorage.setItem("token", res.data.token);
-      localStorage.setItem("userId", res.data.userId);
+      localStorage.setItem("userId", res.data.user.id);
 
       // 3. Redirect to dashboard
       navigate("/");
